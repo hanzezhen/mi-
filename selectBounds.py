@@ -22,6 +22,7 @@ def butter_bandpass_filter(data,lowcut,highcut,fs=250):
 
 def selectBounds(data,label,bounds_list):
     n_components = 4
+    # 定义CSP滤波器 输出4个特征
     csp=CSP(n_components=n_components, reg=None, log=True, norm_trace=False)
     num = len(bounds_list)
     all_features = np.zeros([120,n_components*num])
@@ -31,8 +32,11 @@ def selectBounds(data,label,bounds_list):
         data_features = csp.fit_transform(data, label)
         all_features[:,i:i+4] = data_features
         i = i + 4
+    #按照信息熵筛选前十特征
     select_K = sklearn.feature_selection.SelectKBest(mutual_info_classif, k=10).fit(all_features, label)
     selected_list = select_K.get_support(indices=True)
+
+    # 按照前十特征所在频带 出现的频率排序
     selected_bounds = [] #[ 4  5 10 17 20 21 23 31 33 39]
     selected_dic = {}
     for i in range(len(selected_list)):
@@ -69,7 +73,7 @@ def _parse():
     return args
 
 def calBounds(lowcut,highcut,num_of_bounds):
-    width = (highcut+lowcut)/num_of_bounds
+    width = (highcut-lowcut)/num_of_bounds
     res = []
     begin = lowcut
     for i in range(num_of_bounds):
